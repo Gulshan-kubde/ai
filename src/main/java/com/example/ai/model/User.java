@@ -28,4 +28,13 @@ public class User {
     private boolean verified;
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    public enum Role {
+        USER,
+        ADMIN
+    }
+
 }
