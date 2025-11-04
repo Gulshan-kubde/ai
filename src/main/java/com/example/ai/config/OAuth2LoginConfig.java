@@ -2,6 +2,8 @@ package com.example.ai.config;
 
 import com.example.ai.model.User;
 import com.example.ai.repository.UserRepository;
+import com.example.ai.service.TempAuthCodeStore;
+import com.example.ai.dto.AuthData;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -31,6 +33,7 @@ public class OAuth2LoginConfig implements AuthenticationSuccessHandler {
 
     private final UserRepository userRepository;
     private final OAuth2AuthorizedClientService authorizedClientService;
+    private final TempAuthCodeStore tempAuthCodeStore;
 
     @Value("${app.jwt.secret}")
     private String jwtSecret;
@@ -41,84 +44,64 @@ public class OAuth2LoginConfig implements AuthenticationSuccessHandler {
                                         Authentication authentication)
             throws IOException, ServletException {
 
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-
-            Map<String, Object> attributes = oauthToken.getPrincipal().getAttributes();
-            String provider = oauthToken.getAuthorizedClientRegistrationId();
-
-            OAuth2AuthorizedClient client =
-                    authorizedClientService.loadAuthorizedClient(
-                            oauthToken.getAuthorizedClientRegistrationId(),
-                            oauthToken.getName());
-
-            String accessToken = (client != null && client.getAccessToken() != null)
-                    ? client.getAccessToken().getTokenValue()
-                    : null;
-
-            String email = extractEmail(attributes, provider);
-            if ("github".equalsIgnoreCase(provider) &&
-                    (email == null || email.isBlank() || "null".equalsIgnoreCase(email))) {
-                email = fetchGithubEmail(accessToken);
-            }
-
-            String name = extractName(attributes, provider);
-            String oauthId = extractId(attributes);
-
-            // ✅ Create or update user
-            Optional<User> existing = userRepository.findByEmail(email);
-            User user = existing.orElse(User.builder()
-                    .email(email)
-                    .fullName(name)
-                    .role(User.Role.USER)
-                    .oauthProvider(provider)
-                    .oauthId(oauthId)
-                    .verified(true)
-                    .createdAt(LocalDateTime.now())
-                    .build());
-            userRepository.save(user);
-
-            // ✅ Generate JWT (consistent with JwtAuthFilter)
-            SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-
-            // ✅ UPDATED SECTION: read role from UI query parameter if present
-            String requestedRole = request.getParameter("role"); // ← UI sends ?role=ADMIN or ?role=USER
-            String assignedRole = "USER"; // default
-
-            if (requestedRole != null &&
-                    (requestedRole.equalsIgnoreCase("ADMIN") || requestedRole.equalsIgnoreCase("USER"))) {
-                assignedRole = requestedRole.toUpperCase();
-            }
-
-            String jwt = Jwts.builder()
-                    .setSubject(email)
-                    .claim("role", assignedRole)
-                    .setIssuedAt(new Date())
-                    .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day
-                    .signWith(key, SignatureAlgorithm.HS256)
-                    .compact();
-
-            System.out.println("====================================================");
-            System.out.println("✅ Login Success for: " + email);
-            System.out.println("👤 Role Assigned     : " + assignedRole);
-            System.out.println("🔐 JWT Token         : " + jwt);
-            System.out.println("⚙️  Use this token in Postman as:");
-            System.out.println("   Authorization: Bearer " + jwt);
-            System.out.println("====================================================");
-            // ✅ Store JWT as HttpOnly cookie
-            ResponseCookie jwtCookie = ResponseCookie.from("jwt", jwt)
-                    .httpOnly(true)
-                    .path("/")
-                    .maxAge(24 * 60 * 60)
-                    .build();
-
-            response.addHeader("Set-Cookie", jwtCookie.toString());
-            response.sendRedirect("http://localhost:3000/login/success");
-        } else {
+        if (!(authentication instanceof OAuth2AuthenticationToken oauthToken)) {
             response.sendRedirect("/login/error");
+            return;
         }
+
+        Map<String, Object> attributes = oauthToken.getPrincipal().getAttributes();
+        String provider = oauthToken.getAuthorizedClientRegistrationId();
+
+        OAuth2AuthorizedClient client =
+                authorizedClientService.loadAuthorizedClient(
+                        oauthToken.getAuthorizedClientRegistrationId(),
+                        oauthToken.getName());
+
+        String accessToken = (client != null && client.getAccessToken() != null)
+                ? client.getAccessToken().getTokenValue()
+                : null;
+
+        String email = extractEmail(attributes, provider);
+        if ("github".equalsIgnoreCase(provider) &&
+                (email == null || email.isBlank() || "null".equalsIgnoreCase(email))) {
+            email = fetchGithubEmail(accessToken);
+        }
+
+        String name = extractName(attributes, provider);
+        String oauthId = extractId(attributes);
+
+        // Create or update user
+        String finalEmail = email;
+        User user = userRepository.findByEmail(email)
+                .orElseGet(() -> User.builder()
+                        .email(finalEmail)
+                        .fullName(name)
+                        .role(User.Role.ADMIN)
+                        .oauthProvider(provider)
+                        .oauthId(oauthId)
+                        .verified(true)
+                        .createdAt(LocalDateTime.now())
+                        .build());
+        userRepository.save(user);
+
+        // Create JWT
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        String jwt = Jwts.builder()
+                .setSubject(email)
+                .claim("role", user.getRole().name())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+
+        // Generate temporary auth code
+        String code = UUID.randomUUID().toString();
+        tempAuthCodeStore.save(code, new AuthData(jwt, user));
+
+        // Redirect only with short code, not JWT
+        response.sendRedirect("http://localhost:3000/oauth2/callback?code=" + code);
     }
 
-    // ✅ Extractors for provider-specific fields
     private String extractEmail(Map<String, Object> attrs, String provider) {
         if ("google".equalsIgnoreCase(provider)) return (String) attrs.get("email");
         if ("github".equalsIgnoreCase(provider)) return (String) attrs.get("email");
@@ -128,7 +111,7 @@ public class OAuth2LoginConfig implements AuthenticationSuccessHandler {
 
     private String extractName(Map<String, Object> attrs, String provider) {
         if ("google".equalsIgnoreCase(provider)) return (String) attrs.get("name");
-        if ("github".equalsIgnoreCase(provider)) return (String) attrs.get("login");
+        if ("github".equalsIgnoreCase(provider)) return (String) attrs.getOrDefault("name", attrs.get("login"));
         if ("microsoft".equalsIgnoreCase(provider)) return (String) attrs.get("displayName");
         return "Unknown";
     }
@@ -138,10 +121,8 @@ public class OAuth2LoginConfig implements AuthenticationSuccessHandler {
         return (idObj != null) ? String.valueOf(idObj) : "";
     }
 
-    // ✅ Fallback GitHub email fetch if private
     private String fetchGithubEmail(String accessToken) {
         if (accessToken == null) return "unknown@github.com";
-
         try {
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
@@ -154,13 +135,11 @@ public class OAuth2LoginConfig implements AuthenticationSuccessHandler {
                     entity,
                     List.class
             );
-
             if (response.getBody() != null) {
                 for (Object obj : response.getBody()) {
                     Map<String, Object> emailInfo = (Map<String, Object>) obj;
-                    Boolean primary = (Boolean) emailInfo.get("primary");
-                    Boolean verified = (Boolean) emailInfo.get("verified");
-                    if (Boolean.TRUE.equals(primary) && Boolean.TRUE.equals(verified)) {
+                    if (Boolean.TRUE.equals(emailInfo.get("primary")) &&
+                            Boolean.TRUE.equals(emailInfo.get("verified"))) {
                         return (String) emailInfo.get("email");
                     }
                 }

@@ -70,28 +70,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final OAuth2LoginSuccessHandler successHandler;
+
 
     private final OAuth2LoginConfig oAuth2LoginConfig;
 
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers( "/error", "/api/public/**").permitAll()
-//                        .anyRequest().authenticated()
-//                )
-//                .oauth2Login(oauth -> oauth
-//                        .successHandler(oAuth2LoginConfig) // 👈 our custom success handler
-//                )
-//                .logout(logout -> logout
-//                        .logoutSuccessUrl("http://localhost:3000").permitAll()
-//                );
-//        return http.build();
-//    }
 
     private final JwtAuthFilter jwtAuthFilter;
+
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -101,11 +87,13 @@ public class SecurityConfig {
                         .authenticationEntryPoint(unauthorizedEntryPoint())  // 👈 custom entrypoint
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/error", "/oauth2/**", "/login/**").permitAll()
+                        .requestMatchers("/**", "/error", "/oauth2/**", "/login/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")   // restrict admin APIs
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
                         .anyRequest().authenticated()
                 )
+
+
                 .oauth2Login(oauth -> oauth
                         .successHandler(oAuth2LoginConfig) // 👈 our custom success handler
                 )
