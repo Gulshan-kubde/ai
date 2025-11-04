@@ -73,7 +73,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         );
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                System.out.println("✅ Authenticated user: " + email + " | Role: " + role);
+                System.out.println("✅ Authenticated  user: " + email + " | Role: " + role);
                 System.out.println("🔑 JWT Secret (used to verify): " + jwtSecret);
             } catch (Exception e) {
                 System.out.println("❌ Invalid or expired JWT: " + e.getMessage());

@@ -80,10 +80,13 @@ public class OAuth2LoginConfig implements AuthenticationSuccessHandler {
             // ✅ Generate JWT (consistent with JwtAuthFilter)
             SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
 
-            // Assign ADMIN to test email, USER otherwise
-            String assignedRole = "USER";
-            if (email != null && email.equalsIgnoreCase("gulshankubde5222@gmail.com")) {
-                assignedRole = "ADMIN";
+            // ✅ UPDATED SECTION: read role from UI query parameter if present
+            String requestedRole = request.getParameter("role"); // ← UI sends ?role=ADMIN or ?role=USER
+            String assignedRole = "USER"; // default
+
+            if (requestedRole != null &&
+                    (requestedRole.equalsIgnoreCase("ADMIN") || requestedRole.equalsIgnoreCase("USER"))) {
+                assignedRole = requestedRole.toUpperCase();
             }
 
             String jwt = Jwts.builder()
