@@ -77,7 +77,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 System.out.println("🔑 JWT Secret (used to verify): " + jwtSecret);
             } catch (Exception e) {
                 System.out.println("❌ Invalid or expired JWT: " + e.getMessage());
+
+
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Invalid token");
                 SecurityContextHolder.clearContext();
+                return;
             }
         }
 

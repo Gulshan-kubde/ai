@@ -76,7 +76,7 @@ public class OAuth2LoginConfig implements AuthenticationSuccessHandler {
                 .orElseGet(() -> User.builder()
                         .email(finalEmail)
                         .fullName(name)
-                        .role(User.Role.ADMIN)
+                        .role(User.Role.USER)
                         .oauthProvider(provider)
                         .oauthId(oauthId)
                         .verified(true)

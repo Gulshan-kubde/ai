@@ -1,17 +1,44 @@
 package com.example.ai.controller;
 
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.example.ai.dto.*;
+import com.example.ai.service.UserService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class UserController {
 
-    @GetMapping("/dashboard")
-    @PreAuthorize("hasRole('USER')")
-    public String userDashboard() {
-        return "Welcome User!";
+    private final UserService userService;
+
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<UserResponseDto>> register(@Valid @RequestBody UserRequestDto dto,
+                                                                 @RequestHeader(value = "X-Request-Path", required = false) String path) {
+        UserResponseDto data = userService.registerUser(dto);
+        return ResponseEntity.ok(ApiResponse.success(data, "User registered successfully", 200, path != null ? path : "/api/users/register"));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<UserResponseDto>> login(@Valid @RequestBody LoginRequestDto dto) {
+        UserResponseDto data = userService.loginUser(dto);
+        return ResponseEntity.ok(ApiResponse.success(data, "Login successful", 200, "/api/users/login"));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<UserResponseDto>> getById(@PathVariable Long id) {
+        UserResponseDto user = userService.getUserById(id);
+        return ResponseEntity.ok(ApiResponse.success(user, "User fetched successfully", 200, "/api/users/" + id));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<UserResponseDto>>> getAll() {
+        List<UserResponseDto> users = userService.getAllUsers();
+        return ResponseEntity.ok(ApiResponse.success(users, "All users fetched successfully", 200, "/api/users"));
     }
 }

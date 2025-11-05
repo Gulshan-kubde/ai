@@ -21,6 +21,8 @@ public class User {
 
     private String fullName;
     private String email;
+    private String password;
+    private String mobileNo;
     private String oauthProvider;
     private String oauthId;
     private String otpCode;

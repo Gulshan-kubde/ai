@@ -2,6 +2,7 @@ package com.example.ai.controller;
 
 
 
+import ch.qos.logback.core.net.SyslogOutputStream;
 import com.example.ai.dto.AuthData;
 import com.example.ai.service.AuthService;
 import com.example.ai.service.TempAuthCodeStore;
@@ -29,6 +30,7 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid or expired code"));
         }
         tempAuthCodeStore.delete(code);
+        System.out.println("jwt token : "+ data.getJwt());
         return ResponseEntity.ok(Map.of(
                 "token", data.getJwt(),
                 "user", data.getUser()
