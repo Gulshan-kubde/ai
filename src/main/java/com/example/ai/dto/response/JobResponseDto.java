@@ -20,4 +20,5 @@ public class JobResponseDto {
     private String salaryRange;
     private Boolean isActive;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

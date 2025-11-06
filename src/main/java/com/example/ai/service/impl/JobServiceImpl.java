@@ -2,15 +2,22 @@ package com.example.ai.service.impl;
 
 
 import com.example.ai.dto.request.JobRequestDto;
+import com.example.ai.dto.response.ApiResponse;
 import com.example.ai.dto.response.JobResponseDto;
+import com.example.ai.exception.JobNotFoundException;
 import com.example.ai.exception.ResourceNotFoundException;
 import com.example.ai.model.Job;
 import com.example.ai.model.User;
 import com.example.ai.repository.JobRepository;
 import com.example.ai.repository.UserRepository;
 import com.example.ai.service.JobService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +31,7 @@ public class JobServiceImpl implements JobService {
         User recruiter = userRepository.findById(request.getRecruiterId())
                 .orElseThrow(() -> new ResourceNotFoundException("Recruiter not found with ID: " + request.getRecruiterId()));
 
-        if (!recruiter.getRole().name().equals("ADMIN") && !recruiter.getRole().name().equals("USER")) {
+        if (!recruiter.getRole().name().equals("ADMIN") && !recruiter.getRole().name().equals("RECRUITER")) {
             throw new IllegalStateException("Only recruiters or admins can post jobs");
         }
 
@@ -37,6 +44,8 @@ public class JobServiceImpl implements JobService {
                 .experienceLevel(request.getExperienceLevel())
                 .salaryRange(request.getSalaryRange())
                 .isActive(true)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         Job savedJob = jobRepository.save(job);
@@ -54,4 +63,86 @@ public class JobServiceImpl implements JobService {
                 .createdAt(savedJob.getCreatedAt())
                 .build();
     }
+
+    @Override
+    public List<JobResponseDto> getAllJobsLatestFirst() {
+        try {
+            // Fetch jobs ordered by creation date (latest first)
+            List<Job> jobs = jobRepository.findAllByOrderByCreatedAtDesc();
+
+            // Handle case where no jobs exist
+            if (jobs.isEmpty()) {
+                throw new JobNotFoundException("No jobs found in the system");
+            }
+
+            return jobs.stream()
+                    .map(job -> JobResponseDto.builder()
+                            .jobId(job.getJobId())
+                            .recruiterId(job.getRecruiter().getId())
+                            .title(job.getTitle())
+                            .description(job.getDescription())
+                            .skillsRequired(job.getSkillsRequired())
+                            .location(job.getLocation())
+                            .experienceLevel(job.getExperienceLevel())
+                            .salaryRange(job.getSalaryRange())
+                            .isActive(job.getIsActive())
+                            .createdAt(job.getCreatedAt())
+                            .updatedAt(job.getUpdatedAt())
+                            .build())
+                    .toList();
+
+
+        } catch (JobNotFoundException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new IllegalStateException("Unexpected error while fetching jobs: " + ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public JobResponseDto getJobById(Long jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new JobNotFoundException("Job not found with ID: " + jobId));
+
+        return JobResponseDto.builder()
+                .jobId(job.getJobId())
+                .recruiterId(job.getRecruiter().getId())
+                .title(job.getTitle())
+                .description(job.getDescription())
+                .skillsRequired(job.getSkillsRequired())
+                .location(job.getLocation())
+                .experienceLevel(job.getExperienceLevel())
+                .salaryRange(job.getSalaryRange())
+                .isActive(job.getIsActive())
+                .createdAt(job.getCreatedAt())
+                .updatedAt(job.getUpdatedAt())
+                .build();
+    }
+
+    @Override
+    public List<JobResponseDto> getJobsByRecruiterId(Long recruiterId) {
+        List<Job> jobs = jobRepository.findByRecruiterIdOrderByCreatedAtDesc(recruiterId);
+
+        if (jobs.isEmpty()) {
+            throw new JobNotFoundException("No jobs found for recruiter ID: " + recruiterId);
+        }
+
+        return jobs.stream()
+                .map(job -> JobResponseDto.builder()
+                        .jobId(job.getJobId())
+                        .recruiterId(job.getRecruiter().getId())
+                        .title(job.getTitle())
+                        .description(job.getDescription())
+                        .skillsRequired(job.getSkillsRequired())
+                        .location(job.getLocation())
+                        .experienceLevel(job.getExperienceLevel())
+                        .salaryRange(job.getSalaryRange())
+                        .isActive(job.getIsActive())
+                        .createdAt(job.getCreatedAt())
+                        .updatedAt(job.getUpdatedAt())
+                        .build())
+                .toList();
+    }
+
+
 }

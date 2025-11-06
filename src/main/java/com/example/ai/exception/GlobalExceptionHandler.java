@@ -35,6 +35,11 @@ public class GlobalExceptionHandler {
         throw ex; // 👈 rethrow, so Spring Security’s AccessDeniedHandler handles it (403)
     }
 
+    @ExceptionHandler(JobNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleJobNotFound(JobNotFoundException ex, WebRequest req) {
+        return buildError(HttpStatus.NOT_FOUND, "Job Not Found", ex.getMessage(), req);
+    }
+
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex, WebRequest req) {

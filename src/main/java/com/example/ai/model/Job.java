@@ -31,5 +31,6 @@ public class Job {
     private String salaryRange;
 
     private Boolean isActive = true;
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt ;
+    private LocalDateTime updatedAt;
 }
