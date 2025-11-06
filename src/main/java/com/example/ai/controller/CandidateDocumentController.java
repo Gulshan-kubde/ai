@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
@@ -20,11 +22,14 @@ public class CandidateDocumentController {
             @RequestParam(required = false) MultipartFile resume,
             @RequestParam(required = false) MultipartFile photo,
             @RequestParam(required = false) MultipartFile supportingDocs) {
+
+        DocumentResponseDto response = null;
         try {
-            DocumentResponseDto response = documentService.uploadOrUpdateDocument(userId, resume, photo, supportingDocs);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(null);
+            response = documentService.uploadOrUpdateDocument(userId, resume, photo, supportingDocs);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+        return ResponseEntity.ok(response);
+
     }
 }

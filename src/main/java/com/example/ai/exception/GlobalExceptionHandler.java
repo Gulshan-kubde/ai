@@ -51,6 +51,12 @@ public class GlobalExceptionHandler {
                 , "Already Applied", ex.getMessage(), req);
     }
 
+    @ExceptionHandler(InvalidFileFormatException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidFileFormat(InvalidFileFormatException ex, WebRequest req) {
+        return buildError(HttpStatus.BAD_REQUEST, "Invalid File Format", ex.getMessage(), req);
+    }
+
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex, WebRequest req) {
         return buildError(HttpStatus.NOT_FOUND, "Resource Not Found", ex.getMessage(), req);
