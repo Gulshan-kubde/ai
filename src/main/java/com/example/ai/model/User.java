@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -33,6 +34,10 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<JobApplication> jobApplications;
+
 
     public enum Role {
         USER,

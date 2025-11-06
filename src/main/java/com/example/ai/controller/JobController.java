@@ -58,5 +58,22 @@ public class JobController {
         );
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('RECRUITER','ADMIN')")
+    public ResponseEntity<ApiResponse<JobResponseDto>> updateJob(
+            @PathVariable Long id,
+            @RequestParam Long recruiterId,
+            @Valid @RequestBody JobRequestDto requestDto) {
+
+        JobResponseDto updatedJob = jobService.updateJob(id, recruiterId, requestDto);
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        updatedJob,
+                        "Job updated successfully",
+                        200,
+                        "/api/jobs/" + id
+                )
+        );
+    }
 
 }

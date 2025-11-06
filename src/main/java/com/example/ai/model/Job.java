@@ -3,6 +3,7 @@ package com.example.ai.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "jobs")
@@ -30,7 +31,12 @@ public class Job {
     private String experienceLevel;
     private String salaryRange;
 
-    private Boolean isActive = true;
+    private Boolean isActive;
+
+    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL)
+    private List<JobApplication> applications;
+
+
     private LocalDateTime createdAt ;
     private LocalDateTime updatedAt;
 }

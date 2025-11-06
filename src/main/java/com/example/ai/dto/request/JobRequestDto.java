@@ -22,4 +22,5 @@ public class JobRequestDto {
     private String location;
     private String experienceLevel;
     private String salaryRange;
+    private Boolean isActive;
 }

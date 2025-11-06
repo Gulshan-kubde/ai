@@ -13,5 +13,6 @@ public interface JobService {
     List<JobResponseDto> getAllJobsLatestFirst();
     JobResponseDto getJobById(Long jobId);
     List<JobResponseDto> getJobsByRecruiterId(Long recruiterId);
+    JobResponseDto updateJob(Long jobId, Long recruiterId, JobRequestDto requestDto);
 
 }

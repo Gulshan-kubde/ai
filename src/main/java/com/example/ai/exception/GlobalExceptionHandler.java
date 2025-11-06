@@ -40,6 +40,16 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.NOT_FOUND, "Job Not Found", ex.getMessage(), req);
     }
 
+    @ExceptionHandler(JobAccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleJobAccessDenied(JobAccessDeniedException ex, WebRequest req) {
+        return buildError(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(ApplicationAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleApplicationAlreadyExists(ApplicationAlreadyExistsException ex, WebRequest req) {
+        return buildError(HttpStatus.CONFLICT
+                , "Already Applied", ex.getMessage(), req);
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(ResourceNotFoundException ex, WebRequest req) {
