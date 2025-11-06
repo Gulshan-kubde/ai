@@ -1,4 +1,4 @@
-package com.example.ai.dto;
+package com.example.ai.dto.response;
 
 import com.example.ai.model.User;
 import lombok.*;

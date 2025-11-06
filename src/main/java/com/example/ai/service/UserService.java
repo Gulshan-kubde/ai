@@ -1,6 +1,8 @@
 package com.example.ai.service;
 
-import com.example.ai.dto.*;
+import com.example.ai.dto.request.LoginRequestDto;
+import com.example.ai.dto.request.UserRequestDto;
+import com.example.ai.dto.response.UserResponseDto;
 
 import java.util.List;
 

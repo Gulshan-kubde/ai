@@ -1,4 +1,4 @@
-package com.example.ai.dto;
+package com.example.ai.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;

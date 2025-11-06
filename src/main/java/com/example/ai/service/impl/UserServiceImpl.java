@@ -1,17 +1,18 @@
-package com.example.ai.service;
+package com.example.ai.service.impl;
 
 import com.example.ai.config.JwtTokenUtil;
-import com.example.ai.dto.*;
+import com.example.ai.dto.request.LoginRequestDto;
+import com.example.ai.dto.request.UserRequestDto;
+import com.example.ai.dto.response.UserResponseDto;
 import com.example.ai.exception.*;
 import com.example.ai.model.User;
 import com.example.ai.repository.UserRepository;
+import com.example.ai.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 @Service

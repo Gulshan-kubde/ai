@@ -3,7 +3,7 @@ package com.example.ai.config;
 import com.example.ai.model.User;
 import com.example.ai.repository.UserRepository;
 import com.example.ai.service.TempAuthCodeStore;
-import com.example.ai.dto.AuthData;
+import com.example.ai.dto.response.AuthData;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;

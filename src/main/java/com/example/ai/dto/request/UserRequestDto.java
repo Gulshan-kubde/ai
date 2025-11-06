@@ -1,6 +1,5 @@
-package com.example.ai.dto;
+package com.example.ai.dto.request;
 
-import com.example.ai.model.User;
 import jakarta.validation.constraints.*;
 import lombok.*;
 

@@ -2,9 +2,7 @@ package com.example.ai.controller;
 
 
 
-import ch.qos.logback.core.net.SyslogOutputStream;
-import com.example.ai.dto.AuthData;
-import com.example.ai.service.AuthService;
+import com.example.ai.dto.response.AuthData;
 import com.example.ai.service.TempAuthCodeStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +17,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+
     private final TempAuthCodeStore tempAuthCodeStore;
 
     @PostMapping("/api/auth/exchange")
@@ -46,18 +44,5 @@ public class AuthController {
         );
     }
 
-    @PostMapping("/signup")
-    public String signup(@RequestBody Map<String, String> req) {
-        return authService.signup(req.get("email"), req.get("name"));
-    }
 
-    @PostMapping("/verify-otp")
-    public String verifyOtp(@RequestBody Map<String, String> req) {
-        return authService.verifyOtp(req.get("email"), req.get("otp"));
-    }
-
-    @GetMapping("/login/success")
-    public String success(@RequestParam String token) {
-        return "Login successful! Token: " + token;
-    }
 }

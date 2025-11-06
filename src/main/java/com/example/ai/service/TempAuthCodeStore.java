@@ -1,6 +1,6 @@
 package com.example.ai.service;
 
-import com.example.ai.dto.AuthData;
+import com.example.ai.dto.response.AuthData;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
