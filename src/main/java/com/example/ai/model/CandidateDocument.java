@@ -21,23 +21,29 @@ public class CandidateDocument {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    // Placeholder for future S3 or local URLs
+    // Future fields for cloud storage URLs
+    @Column(name = "resume_url")
     private String resumeUrl;
+
+    @Column(name = "photo_url")
     private String photoUrl;
+
+    @Column(name = "supporting_docs_url")
     private String supportingDocsUrl;
 
-    // Store actual files as binary data
-    @Lob
-    @Column(name = "resume_data")
+    // ✅ Use BYTEA explicitly for PostgreSQL instead of OID LOB
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "resume_data", columnDefinition = "BYTEA")
     private byte[] resumeData;
 
-    @Lob
-    @Column(name = "photo_data")
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "photo_data", columnDefinition = "BYTEA")
     private byte[] photoData;
 
-    @Lob
-    @Column(name = "supporting_docs_data")
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "supporting_docs_data", columnDefinition = "BYTEA")
     private byte[] supportingDocsData;
 
+    @Column(name = "uploaded_at", nullable = true)
     private LocalDateTime uploadedAt = LocalDateTime.now();
 }

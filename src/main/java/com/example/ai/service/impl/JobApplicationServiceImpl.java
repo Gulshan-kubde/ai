@@ -5,9 +5,11 @@ import com.example.ai.dto.response.JobApplicationResponseDto;
 import com.example.ai.exception.ApplicationAlreadyExistsException;
 import com.example.ai.exception.JobNotFoundException;
 import com.example.ai.exception.ResourceNotFoundException;
+import com.example.ai.model.CandidateDocument;
 import com.example.ai.model.Job;
 import com.example.ai.model.JobApplication;
 import com.example.ai.model.User;
+import com.example.ai.repository.CandidateDocumentRepository;
 import com.example.ai.repository.JobApplicationRepository;
 import com.example.ai.repository.JobRepository;
 import com.example.ai.repository.UserRepository;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +27,7 @@ public class JobApplicationServiceImpl implements JobApplicationService {
     private final JobApplicationRepository jobApplicationRepository;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
+    private final CandidateDocumentRepository candidateDocumentRepository;
 
     @Override
     public JobApplicationResponseDto applyForJob(JobApplicationRequestDto request) {
@@ -37,9 +41,26 @@ public class JobApplicationServiceImpl implements JobApplicationService {
             throw new ApplicationAlreadyExistsException("User already applied for this job");
         }
 
+        CandidateDocument candidateDoc = candidateDocumentRepository.findByUserId(user.getId()).orElse(null);
+
+        byte[] resumeData = (request.getResume() != null && request.getResume().length > 0)
+                ? request.getResume()
+                : (candidateDoc != null ? candidateDoc.getResumeData() : null);
+
+        byte[] photoData = (request.getPhoto() != null && request.getPhoto().length > 0)
+                ? request.getPhoto()
+                : (candidateDoc != null ? candidateDoc.getPhotoData() : null);
+
+        // Defensive null check: at least resume or photo should exist
+        if (resumeData == null && photoData == null) {
+            throw new ResourceNotFoundException("No valid resume or photo found for this application.");
+        }
+
         JobApplication application = JobApplication.builder()
                 .user(user)
                 .job(job)
+                .resume(resumeData)
+                .photo(photoData)
                 .status(JobApplication.ApplicationStatus.PENDING)
                 .build();
 

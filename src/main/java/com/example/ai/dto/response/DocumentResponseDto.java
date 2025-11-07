@@ -16,6 +16,7 @@ public class DocumentResponseDto {
     private String supportingDocsUrl;
 
     private String resumeBase64;
+    private byte[] resumeBtye;
     private String photoBase64;
     private String supportingDocsBase64;
 

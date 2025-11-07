@@ -13,10 +13,12 @@ public class TempAuthCodeStore {
     private final Map<String, StoredAuth> store = new ConcurrentHashMap<>();
 
     public void save(String code, AuthData data) {
+        System.out.println("save code "+code);
         store.put(code, new StoredAuth(data, Instant.now().plusSeconds(120))); // 2 min expiry
     }
 
     public AuthData get(String code) {
+        System.out.println("get code "+code);
         StoredAuth s = store.get(code);
         if (s == null || Instant.now().isAfter(s.expiry())) {
             store.remove(code);

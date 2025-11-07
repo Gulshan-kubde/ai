@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -29,9 +30,8 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<UserResponseDto>> login(@Valid @RequestBody LoginRequestDto dto) {
-        UserResponseDto data = userService.loginUser(dto);
-        return ResponseEntity.ok(ApiResponse.success(data, "Login successful", 200, "/api/users/login"));
+    public ResponseEntity<ApiResponse<Map<String, Object>>> login(@Valid @RequestBody LoginRequestDto dto) {
+        return ResponseEntity.ok(ApiResponse.success(userService.loginUser(dto), "Login successful", 200, "/api/users/login"));
     }
 
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")

@@ -1,6 +1,7 @@
 package com.example.ai.service;
 
 import com.example.ai.dto.response.DocumentResponseDto;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -10,4 +11,6 @@ public interface CandidateDocumentService {
                                                MultipartFile resume,
                                                MultipartFile photo,
                                                MultipartFile supportingDocs) throws IOException;
+    byte[] downloadResume(Long userId);
+    String getResumeBase64(Long userId);
 }

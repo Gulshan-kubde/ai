@@ -13,10 +13,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayOutputStream;
+
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
+
+import static com.example.ai.util.Base64Utils.toBase64;
 
 @Service
 @RequiredArgsConstructor
@@ -54,7 +56,10 @@ public class CandidateDocumentServiceImpl implements CandidateDocumentService {
                     throw new InvalidFileFormatException("Resume must be a PDF or Word document");
                 }
                 document.setResumeData(resume.getBytes());
-                document.setResumeUrl(null); // for future use (e.g. S3)
+                document.setResumeUrl(null);
+                byte[] resumeBytes = resume.getBytes();
+
+
             }
 
             // ✅ Handle photo
@@ -69,38 +74,62 @@ public class CandidateDocumentServiceImpl implements CandidateDocumentService {
                 document.setSupportingDocsUrl(null);
             }
 
+
             // ✅ Save or update record
             CandidateDocument saved = documentRepository.save(document);
-            byte[] resumeBytes = saved.getResumeData();
-            byte[] photoBytes = saved.getPhotoData();
-            byte[] docsBytes = saved.getSupportingDocsData();
 
-            ByteArrayOutputStream boas = new ByteArrayOutputStream();
-            boas.write(saved.getResumeData());
-            // ✅ Prepare Base64 safely (no prefix — clean for Blob display)
-            return DocumentResponseDto.builder()
+            DocumentResponseDto response =DocumentResponseDto.builder()
                     .docId(saved.getDocId())
                     .userId(userId)
-                   // .resumeBase64(toBase64(saved.getResumeData()))
-                    .resumeBtye(boas.toByteArray())
+                    .resumeBase64(toBase64(saved.getResumeData()))
+                    //.resumeBtye(saved.getResumeData())
                     .photoBase64(toBase64(saved.getPhotoData()))
                     .supportingDocsBase64(toBase64(saved.getSupportingDocsData()))
                     .uploadedAt(saved.getUploadedAt())
                     .build();
+
+            if (response.getResumeBase64() != null) {
+                try {
+                    byte[] decoded = Base64.getDecoder().decode(response.getResumeBase64());
+                    System.out.println("Base64 validation: Successfully decoded " + decoded.length + " bytes");
+                } catch (IllegalArgumentException e) {
+                    System.err.println("ERROR: Generated Base64 is invalid! " + e.getMessage());
+                    throw new RuntimeException("Failed to generate valid Base64 encoding");
+                }
+            }
+
+            // ✅ Prepare Base64 safely (no prefix — clean for Blob display)
+            return response;
 
         } catch (IOException e) {
             throw new RuntimeException("Error processing uploaded files", e);
         }
     }
 
-    /**
-     * Converts byte[] to clean Base64 (no data: prefix).
-     */
-    private String toBase64(byte[] data) {
-        if (data == null || data.length == 0)
-            return null;
-        return Base64.getEncoder().encodeToString(data);
+    @Override
+    public byte[] downloadResume(Long userId) {
+        CandidateDocument document = documentRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
+
+        if (document.getResumeData() == null) {
+            throw new ResourceNotFoundException("No resume found for user");
+        }
+        return document.getResumeData();
     }
+
+    @Override
+    public String getResumeBase64(Long userId) {
+        CandidateDocument document = documentRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
+
+        if (document.getResumeData() == null) {
+            throw new ResourceNotFoundException("No resume found for user");
+        }
+
+        String base64 = Base64.getEncoder().encodeToString(document.getResumeData());
+        return base64;
+    }
+
 
 
 }

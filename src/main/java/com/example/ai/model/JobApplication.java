@@ -27,6 +27,10 @@ public class JobApplication {
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
+    private byte[] resume;
+
+    private byte[] photo;
+
     private LocalDateTime appliedAt = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)

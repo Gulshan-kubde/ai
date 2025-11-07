@@ -9,6 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 public class LoginRequestDto {
 
     @NotBlank(message = "Email is required")

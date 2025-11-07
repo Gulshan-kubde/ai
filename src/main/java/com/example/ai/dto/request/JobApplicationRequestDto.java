@@ -8,4 +8,6 @@ import lombok.Setter;
 public class JobApplicationRequestDto {
     private Long userId;
     private Long jobId;
+    private byte[] resume;
+    private byte[] photo;
 }

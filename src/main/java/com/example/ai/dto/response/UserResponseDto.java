@@ -15,5 +15,6 @@ public class UserResponseDto {
     private String mobileNo;
     private User.Role role;
     private boolean verified;
-    private String token;
+    private String photo;
+    private String resume;
 }
